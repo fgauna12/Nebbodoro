@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "names-nebbodoro-api-sp": {
+      "value": "cmd-nebbodoro-api-sp"
+    },
+    "names-nebbodoro-api": {
+      "value": "cmd-nebbodoro-api"
+    },
+    "names-nebbodoro-api-ai": {
+      "value": "cmd-nebbodoro-api-ai"
+    },
+    "names-nebbodoro-sqlsvr": {
+      "value": "cmd-nebbodoro-sqlsvr-01"
+    }
+  }
+}

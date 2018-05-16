@@ -1,0 +1,214 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "names-nebbodoro-api-sp": {
+      "type": "string",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "names-nebbodoro-api": {
+      "type": "string",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "names-nebbodoro-api-ai": {
+      "type": "string",
+      "metadata": {
+        "description": "The name to give the Application Insights instance for the API layer"
+      }
+    },
+    "names-nebbodoro-sqlsvr": {
+      "type": "string",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "names-nebbodoro-database": {
+      "type": "string",
+      "defaultValue": "Pomodoro",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "sql-admin-username": {
+      "type": "string",
+      "defaultValue": "nebbodoro-admin",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "sql-admin-password": {
+      "type": "securestring",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "sizes-nebbodoro-database": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition of SQL Database"
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[parameters('names-nebbodoro-sqlsvr')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[parameters('names-nebbodoro-sqlsvr')]",
+        "Tier": "Data"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sql-admin-username')]",
+        "administratorLoginPassword": "[parameters('sql-admin-password')]"
+      },
+      "resources": [
+        {
+          "name": "[parameters('names-nebbodoro-database')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Database",
+            "Tier": "Data"
+          },
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))]"
+          ],
+          "properties": {
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "requestedServiceObjectiveName": "[parameters('sizes-nebbodoro-database')]"
+          }
+        },
+        {
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "AllowAllWindowsAzureIps",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          },
+          "type": "firewallrules"
+        },
+        {
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "Nebbia Office",
+          "properties": {
+            "startIpAddress": "108.188.39.215",
+            "endIpAddress": "108.188.39.215"
+          },
+          "type": "firewallrules"
+        }
+      ]
+    },
+    
+    {
+      "apiVersion": "2014-06-01",
+      "name": "[parameters('names-nebbodoro-api-sp')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "B1"
+      },
+      "tags": {
+        "displayName": "[parameters('names-nebbodoro-api-sp')]",
+        "Tier": "Back-end"
+      },
+      "properties": {
+        "name": "[parameters('names-nebbodoro-api-sp')]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[parameters('names-nebbodoro-api-ai')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "[parameters('names-nebbodoro-api-ai')]",
+        "Tier": "Back-end"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/', parameters('names-nebbodoro-api'))]"
+      ],
+      "properties": {
+        "applicationId": "[parameters('names-nebbodoro-api')]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[parameters('names-nebbodoro-api')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]": "Resource",
+        "displayName": "[parameters('names-nebbodoro-api')]",
+        "Tier": "Back-end"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]",
+        "[resourceId('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))]"
+      ],
+      "properties": {
+        "name": "[parameters('names-nebbodoro-api')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]"
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "type": "config",
+          "name": "connectionstrings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites/', parameters('names-nebbodoro-api'))]"
+          ],
+          "properties": {
+            "Sql": {
+              "value": "[concat('Data Source=tcp:', reference(resourceId('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('names-nebbodoro-database'), ';User Id=', parameters('sql-admin-username'), '@', parameters('names-nebbodoro-sqlsvr'), ';Password=', parameters('sql-admin-password'), ';')]",
+              "type": "SQLServer"
+            }
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "type": "config",
+          "name": "appSettings",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites/', parameters('names-nebbodoro-api'))]",
+            "[resourceId('Microsoft.insights/components/', parameters('names-nebbodoro-api-ai'))]"
+          ],
+          "properties": {
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(parameters('names-nebbodoro-api-ai')).InstrumentationKey]"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "outputs-api-name": {
+      "type": "string",
+      "value": "[reference(parameters('names-nebbodoro-api')).deploymentId]"
+    }
+  }
+}
