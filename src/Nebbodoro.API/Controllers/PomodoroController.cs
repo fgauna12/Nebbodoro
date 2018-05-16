@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Linq;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Nebbodoro.API.Context;
 using Nebbodoro.API.Models;
 
 namespace Nebbodoro.API.Controllers
 {
-    [Route("api/pomodoros")]
+    [Route("api/pomodoro")]
     public class PomodoroController : Controller
     {
         private readonly PomodoroContext _pomodoroContext;
+        private readonly TelemetryClient _telemetryClient;
 
-        public PomodoroController(PomodoroContext pomodoroContext)
+        public PomodoroController(PomodoroContext pomodoroContext, TelemetryClient telemetryClientClient)
         {
             _pomodoroContext = pomodoroContext;
+            _telemetryClient = telemetryClientClient;
         }
-        private readonly Microsoft.ApplicationInsights.TelemetryClient _telemetry = new Microsoft.ApplicationInsights.TelemetryClient();
 
         [Route("")]
         [HttpGet]
@@ -33,7 +35,7 @@ namespace Nebbodoro.API.Controllers
                 })
                 .ToList();
 
-            _telemetry.TrackEvent("Get Pomodoro Data....");
+            _telemetryClient.TrackEvent("Get Pomodoro Data....");
 
             return Ok(result);
         }
@@ -79,11 +81,11 @@ namespace Nebbodoro.API.Controllers
             if (email == "user@nebbiatech.com")
             {
                 var ex = new Exception("Bad user data...");
-                _telemetry.TrackException(ex);
+                _telemetryClient.TrackException(ex);
                 throw ex;
             }
 
-            _telemetry.TrackEvent("Get Pomodoro Data for " + email + " ....");
+            _telemetryClient.TrackEvent("Get Pomodoro Data for " + email + " ....");
             return Ok(result);
         }
 

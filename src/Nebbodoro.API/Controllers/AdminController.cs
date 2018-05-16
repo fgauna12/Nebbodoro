@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nebbodoro.API.Context;
-using Nebbodoro.API.Models;
 
 namespace Nebbodoro.API.Controllers
 {
@@ -26,6 +24,8 @@ namespace Nebbodoro.API.Controllers
             _pomodoroContext.AddPomodorosFor("Facundo", "facundo@nebbiatech.com", "Research");
             _pomodoroContext.AddPomodorosFor("Jared", "jared@nebbiatech.com", "Blogging");
             _pomodoroContext.AddPomodorosFor("Esteban", "esteban@nebbiatech.com", "RoadShow");
+
+            _pomodoroContext.SaveChanges();
 
             return Ok();
         }

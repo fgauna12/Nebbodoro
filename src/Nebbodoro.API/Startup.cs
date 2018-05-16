@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Globalization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,16 @@ namespace Nebbodoro.API
             {
                 c.SwaggerDoc("v1", new Info { Title = "API", Version = "v1" });
             });
+
+            /*
+             * Note: Don't do this in real-word apps! This is for workshop purposes only
+             */
+            services.AddCors(options => options.AddPolicy("allowAll", builder =>
+            {
+                builder.AllowAnyOrigin();
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+            }));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,6 +61,8 @@ namespace Nebbodoro.API
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
             });
+
+            app.UseCors("allowAll");
 
             app.UseMvc();
         }

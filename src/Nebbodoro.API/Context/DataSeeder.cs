@@ -52,7 +52,6 @@ namespace Nebbodoro.API.Context
             });
 
             context.Pomodoros.AddRange(pomodoros);
-            context.SaveChanges();
         }
     }
 }
