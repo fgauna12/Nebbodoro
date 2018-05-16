@@ -10,7 +10,7 @@ namespace Nebbodoro.API.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "User",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -21,11 +21,11 @@ namespace Nebbodoro.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_User", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Pomodoros",
+                name: "Pomodoro",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -38,28 +38,28 @@ namespace Nebbodoro.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Pomodoros", x => x.Id);
+                    table.PrimaryKey("PK_Pomodoro", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Pomodoros_Users_UserId",
+                        name: "FK_Pomodoro_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Pomodoros_UserId",
-                table: "Pomodoros",
+                name: "IX_Pomodoro_UserId",
+                table: "Pomodoro",
                 column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Pomodoros");
+                name: "Pomodoro");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "User");
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nebbodoro.API.Context;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Nebbodoro.API
 {
@@ -21,8 +22,13 @@ namespace Nebbodoro.API
         {
             services.AddMvc();
 
-            var connection = @"Server=(localdb)\mssqllocaldb;Database=EFGetStarted.AspNetCore.NewDb;Trusted_Connection=True;ConnectRetryCount=0";
-            services.AddDbContext<PomodoroContext>(options => options.UseSqlServer(connection));
+            services.AddDbContext<PomodoroContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Sql")));
+
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "API", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -34,7 +40,17 @@ namespace Nebbodoro.API
             }
 
             app.UseDatabaseErrorPage();
-            app.UseWelcomePage();
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+            });
+
             app.UseMvc();
         }
     }

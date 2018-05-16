@@ -11,7 +11,7 @@ using System;
 namespace Nebbodoro.API.Migrations
 {
     [DbContext(typeof(PomodoroContext))]
-    [Migration("20180516182303_InitialCreate")]
+    [Migration("20180516203919_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,7 +40,7 @@ namespace Nebbodoro.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Pomodoros");
+                    b.ToTable("Pomodoro");
                 });
 
             modelBuilder.Entity("Nebbodoro.API.Models.User", b =>
@@ -56,7 +56,7 @@ namespace Nebbodoro.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("Nebbodoro.API.Models.Pomodoro", b =>

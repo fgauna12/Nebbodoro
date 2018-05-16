@@ -6,6 +6,7 @@ using Nebbodoro.API.Models;
 
 namespace Nebbodoro.API.Controllers
 {
+    [Route("api/pomodoros")]
     public class PomodoroController : Controller
     {
         private readonly PomodoroContext _pomodoroContext;
@@ -16,6 +17,8 @@ namespace Nebbodoro.API.Controllers
         }
         private readonly Microsoft.ApplicationInsights.TelemetryClient _telemetry = new Microsoft.ApplicationInsights.TelemetryClient();
 
+        [Route("")]
+        [HttpGet]
         public IActionResult Get()
         {
             var result = _pomodoroContext.Pomodoros
@@ -35,6 +38,8 @@ namespace Nebbodoro.API.Controllers
             return Ok(result);
         }
 
+        [Route("{id}")]
+        [HttpGet]
         public IActionResult Get(int id)
         {
             var result = _pomodoroContext.Pomodoros
@@ -54,6 +59,8 @@ namespace Nebbodoro.API.Controllers
             return Ok(result);
         }
 
+        [Route("{email}")]
+        [HttpGet]
         public IActionResult Get(string email)
         {
             var result = _pomodoroContext.Pomodoros
@@ -80,7 +87,9 @@ namespace Nebbodoro.API.Controllers
             return Ok(result);
         }
 
-        public IActionResult Post(Pomodoro pomodoro)
+        [Route("")]
+        [HttpPost]
+        public IActionResult Post([FromBody]Pomodoro pomodoro)
         {
             var user = _pomodoroContext.Users.FirstOrDefault(u => u.Email == pomodoro.User.Email);
             _pomodoroContext.Pomodoros.Add(new Pomodoro
@@ -97,6 +106,8 @@ namespace Nebbodoro.API.Controllers
             return Ok();
         }
 
+        [Route("{id}")]
+        [HttpDelete]
         public IActionResult Delete(int id)
         {
             var pomodoro = _pomodoroContext.Pomodoros.Find(id);
