@@ -13,6 +13,9 @@
     },
     "names-nebbodoro-sqlsvr": {
       "value": "cmd-nebbodoro-sqlsvr-01"
+    },
+    "names-nebbodoro-eventgrid": {
+      "value": "cmd-nebbodoro-eventgrid"
     }
   }
 }

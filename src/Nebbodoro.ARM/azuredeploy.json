@@ -33,6 +33,12 @@
         "description": ""
       }
     },
+    "names-nebbodoro-eventgrid": {
+      "type": "string",
+      "metadata": {
+        "description": ""
+      }
+    },
     "sql-admin-username": {
       "type": "string",
       "defaultValue": "nebbodoro-admin",
@@ -124,7 +130,6 @@
         }
       ]
     },
-    
     {
       "apiVersion": "2014-06-01",
       "name": "[parameters('names-nebbodoro-api-sp')]",
@@ -203,6 +208,12 @@
           }
         }
       ]
+    },
+    {
+      "name": "[parameters('names-nebbodoro-eventgrid')]",
+      "type": "Microsoft.EventGrid/topics",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-01-01"
     }
   ],
   "outputs": {

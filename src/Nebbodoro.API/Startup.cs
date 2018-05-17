@@ -1,10 +1,15 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Azure.EventGrid;
+using Microsoft.Azure.EventGrid.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Nebbodoro.API.Context;
+using Nebbodoro.API.EventGrid;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Nebbodoro.API
@@ -22,6 +27,8 @@ namespace Nebbodoro.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.AddOptions();
+            services.Configure<EventGridOptions>(Configuration.GetSection("EventGrid"));
 
             services.AddDbContext<PomodoroContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Sql")));
 
@@ -40,6 +47,8 @@ namespace Nebbodoro.API
                 builder.AllowAnyHeader();
                 builder.AllowAnyMethod();
             }));
+
+            services.AddTransient<EventGridManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
