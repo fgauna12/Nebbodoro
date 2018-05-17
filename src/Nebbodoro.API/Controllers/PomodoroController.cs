@@ -2,7 +2,9 @@
 using System.Linq;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Nebbodoro.API.Context;
+using Nebbodoro.API.EventGrid;
 using Nebbodoro.API.Models;
 
 namespace Nebbodoro.API.Controllers
@@ -12,11 +14,13 @@ namespace Nebbodoro.API.Controllers
     {
         private readonly PomodoroContext _pomodoroContext;
         private readonly TelemetryClient _telemetryClient;
+        private readonly EventGridManager _eventGridManager;
 
-        public PomodoroController(PomodoroContext pomodoroContext, TelemetryClient telemetryClientClient)
+        public PomodoroController(PomodoroContext pomodoroContext, TelemetryClient telemetryClientClient, EventGridManager eventGridManager)
         {
             _pomodoroContext = pomodoroContext;
             _telemetryClient = telemetryClientClient;
+            _eventGridManager = eventGridManager;
         }
 
         [Route("")]
@@ -42,7 +46,7 @@ namespace Nebbodoro.API.Controllers
 
         [Route("{id}")]
         [HttpGet]
-        public IActionResult Get(int id)
+        public IActionResult Get([FromRoute] int id)
         {
             var result = _pomodoroContext.Pomodoros
                 .Where(p => p.User.Id == id)
@@ -63,7 +67,7 @@ namespace Nebbodoro.API.Controllers
 
         [Route("{email}")]
         [HttpGet]
-        public IActionResult Get(string email)
+        public IActionResult Get([FromRoute] string email)
         {
             var result = _pomodoroContext.Pomodoros
                 .Where(p => p.User.Email == email)
@@ -108,9 +112,21 @@ namespace Nebbodoro.API.Controllers
             return Ok();
         }
 
+        [Route("{id}/done")]
+        [HttpPost]
+        public IActionResult Post([FromRoute] int id)
+        {
+            var pomodoro = _pomodoroContext.Pomodoros.FirstOrDefault(x => x.Id == id);
+            if (pomodoro != null)
+            {
+                _eventGridManager.OnPomodoroDone(pomodoro);
+            }
+            return Ok();
+        }
+
         [Route("{id}")]
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var pomodoro = _pomodoroContext.Pomodoros.Find(id);
 
