@@ -1,5 +1,9 @@
 # Nebbodoro Sample App (ASP.NET Core, Azure App Service, Event Grid) :tomato:
 
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffgauna12%2FNebbodoro%2Fmaster%2Fsrc%2FNebbodoro.ARM%2Fazuredeploy.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+
 Nebbodoro is a sample app based on the [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique).
 It aims to show-case .NET Core development on Azure using Azure technologies. 
 
@@ -24,9 +28,22 @@ Once the ARM template is deployed, you still have to deploy the API App Service.
 
 **Note:** Today, this ARM template does not include the front-end. You can deploy this seperately using Azure Container Instance. _(See Below)_
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffgauna12%2FNebbodoro%2Fmaster%2Fsrc%2FNebbodoro.ARM%2Fazuredeploy.json" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
+<p align="center">
+  <img alt="Azure Architecture" src="/assets/azure_architecture.png?raw=true">
+</p>
+
+## ASP.NET Core API  
+
+An unauthenticated API using:
+- ASP.NET Core 2.0 and .NET Core 2.0.
+- ORM is Entity Framework Core 2.0.
+- Application Insights for Telemetry
+- Event Grid for events to be consumed by serverless components
+
+### Publishing to Azure
+
+We recommend that you avoid _right-click deploy_ from within Visual Studio. Instead, use CI/CD to publish from your own Git Repo.
+We like to use [Visual Studio Team Services](https://www.visualstudio.com/team-services/)
 
 ## Angular Front-End (Optional)
 
