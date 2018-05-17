@@ -259,3 +259,4 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/src/Nebbodoro.API/Properties/PublishProfiles/cmd-nebbodoro-api - Web Deploy.pubxml

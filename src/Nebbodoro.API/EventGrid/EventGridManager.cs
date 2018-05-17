@@ -30,6 +30,9 @@ namespace Nebbodoro.API.EventGrid
                 DataVersion = "1.0"
             };
 
+            if (_options.Value?.TopicEndpoint == null || _options.Value?.TopicKey == null)
+                return;
+
             string topicEndpoint = _options.Value.TopicEndpoint;
             string topicKey = _options.Value.TopicKey;
             string topicHostname = new Uri(topicEndpoint).Host;

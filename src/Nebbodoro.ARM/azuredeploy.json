@@ -204,7 +204,9 @@
             "[resourceId('Microsoft.insights/components/', parameters('names-nebbodoro-api-ai'))]"
           ],
           "properties": {
-            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(parameters('names-nebbodoro-api-ai')).InstrumentationKey]"
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(parameters('names-nebbodoro-api-ai')).InstrumentationKey]",
+            "EventGrid__TopicEndpoint": "[reference(parameters('names-nebbodoro-eventgrid')).endpoint]",
+            "EventGrid__TopicKey": "[listKeys(resourceId('Microsoft.EventGrid/topics', parameters('names-nebbodoro-eventgrid')), '2018-01-01').key1]"
           }
         }
       ]
