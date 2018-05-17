@@ -37,10 +37,12 @@ It uses the back-end API hosted anywhere and the API can be specified at _runtim
   <img alt="Nebbodoro in action" src="/assets/nebbodoro_example.png?raw=true">
 </p>
 
-Run from a Docker container:
+### Run from a Docker container
+
 `docker run -p 4100:80 -e API_URL='https://some-api.azurewebsites.net/api/' fgauna12/nebbodoro.spa`
 
-Run from Azure Container Instance:
+### Run from Azure Container Instance
+
 `az container create --resource-group myResourceGroup -e API_URL=https://some-api.azurewebsites.net/api/ -n myapp --image fgauna12/nebbodoro.spa --dns-name-label myapp --ports 80`
 
 ## Extending with Azure Functions or Azure Logic Apps
