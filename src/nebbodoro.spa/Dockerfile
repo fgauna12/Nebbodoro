@@ -20,5 +20,5 @@ WORKDIR /usr/src/app
 COPY --from=express-server /app /usr/src/app
 COPY --from=angular-app /app/dist /usr/src/app
 
-EXPOSE 3000
+EXPOSE 80
 CMD [ "node", "index.js" ]
