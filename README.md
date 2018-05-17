@@ -9,7 +9,6 @@ It aims to show-case .NET Core development on Azure using Azure technologies.
 
 This app it's meant to be simple enough to be used during a workshop. It has minimal dependencies yet it's rich enough to provide a demo.
 The front-end can be downloaded as a Angular Docker image so that developers can just focus on the ASP.NET Core API.
-In addition, this a
 
 ## Requirements
 
