@@ -114,19 +114,6 @@
             "endIpAddress": "0.0.0.0"
           },
           "type": "firewallrules"
-        },
-        {
-          "apiVersion": "2014-04-01",
-          "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('names-nebbodoro-sqlsvr'))]"
-          ],
-          "location": "[resourceGroup().location]",
-          "name": "Nebbia Office",
-          "properties": {
-            "startIpAddress": "108.188.39.215",
-            "endIpAddress": "108.188.39.215"
-          },
-          "type": "firewallrules"
         }
       ]
     },
