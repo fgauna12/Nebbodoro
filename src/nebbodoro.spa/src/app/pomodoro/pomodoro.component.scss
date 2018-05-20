@@ -1,0 +1,170 @@
+.navbar {
+    background-color: transparent;
+}
+.top-nav-collapse {
+    background-color: #4285F4;
+}
+@media only screen and (max-width: 768px) {
+    .navbar {
+        background-color: #4285F4;
+    }
+}
+
+.btn.btn-primary,
+.btn-info,
+.btn-outline-info,
+.nebbia-green {
+    background-color: #72BD49;
+    border-color: #72BD49;
+}
+
+.btn-outline-info {
+    color: white !important;
+}
+.btn.btn-primary:focus,
+.btn-info:focus,
+.btn-outline-info:focus,
+.nebbia-green:focus,
+.btn.btn-primary:hover,
+.btn-info:hover,
+.btn-outline-info:hover,
+.nebbia-green:hover{
+    background-color: #2e7d32;
+    border-color: #2e7d32;
+}
+
+#banner {
+    width: 100%;
+    height: 350px;    
+    position: relative;
+    overflow: hidden;
+}
+
+video {
+    background: transparent url(/assets/banner-poster.PNG) 50% 50% / cover no-repeat;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);    
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+.overlay {
+    z-index: 2;
+    position: absolute;
+    background: rgba(178, 46, 44, 0.75);
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.pomo-card {
+    height: 200px;
+}
+#main-card {
+    position: absolute;
+    margin-top: -250px;
+    z-index: 10;
+    padding-top: 15px;
+}
+
+#main-card .card-title {
+    font-weight: 300;
+    color: #555;
+}
+
+
+.controls-wrapper {
+    display: block;
+    width: 100%;
+    margin-top: -125px;
+}
+
+.controls-wrapper label {
+    display: block;
+    width: 150px;
+    margin: 5px auto;
+    padding-top: 5px;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.controls-wrapper input {
+    display: block;
+    width: 75px;
+    margin: 5px auto;
+    padding-top: 5px;
+    text-align: center;
+}
+
+.btn-group {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    margin-top: 35px;
+}
+
+
+
+
+.progress-wrapper {
+    position: relative;
+    font-size: 40px;
+  }
+  
+  .current {
+    position: absolute;
+    width: 100%;
+    margin: -45px auto 5px;
+    color: #bbb;
+    font-weight: 100;
+    line-height: 1;
+    text-align: center;
+  }
+  
+  round-progress {
+    margin: auto;
+  }
+
+  .actions {
+    position: relative;
+    margin-top: 125px;
+    width: 90%;
+    text-align: center;
+    color: #404040;
+  }
+
+  .pomo-data {
+      margin-top: 5px;
+  }
+
+  img.pomodoro {
+      width: 40px;
+      height: 40px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+  }
+
+  #pomodoro-technique {
+      width: 100%;
+      height: 100%;
+  }
+
+  .footer-row {
+      color: #555;
+      font-weight: 300;
+  }
+  #footer-logo {
+      width: 50px;
+      height: 50px;
+  }
+
+  h5 {
+      display: inline-block;
+  }

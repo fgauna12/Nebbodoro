@@ -1,0 +1,236 @@
+<mdb-navbar SideClass="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar" [containerInside]="true">
+  <logo>
+    <a class="logo navbar-brand" href="#">
+      <strong>Nebbodoro Timer</strong>
+    </a>
+  </logo>
+  <links>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item active waves-light" (click)="form.show()" mdbRippleRadius>
+        <a class="nav-link">Login
+          <i class="fa fa-lg fa-user"></i>
+          <span class="sr-only">(current)</span>
+        </a>
+      </li>
+    </ul>
+  </links>
+</mdb-navbar>
+
+<div class="row">
+  <div id="banner" class="">
+    <video preload="none" autoplay loop>
+      <source src="/assets/banner-vid.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+  </div>
+</div>
+
+
+<div class="row pomo-card justify-content-center">
+  <div id="main-card" class="card">
+
+    <div class="progress-wrapper">
+      <div class="current" [ngStyle]="getOverlayStyle()">{{ current }}/{{ max }}
+        <i class="fa fa-play"></i>
+      </div>
+      <round-progress [current]="current" [max]="max" [stroke]="stroke" [radius]="radius" [semicircle]="semicircle" [rounded]="rounded"
+        [responsive]="responsive" [clockwise]="clockwise" [color]="color" [background]="background" [duration]="duration" [animation]="animation"
+        [animationDelay]="animationDelay"></round-progress>
+
+      <div class="card-body">
+        <h4 class="card-title justify-content-center">Implement Login Screen</h4>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row actions">
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <i class="fa fa-sign-in fa-3x"></i>
+        <h4 class="card-title ">Register Your Account</h4>
+        <p class="card-text"></p>
+        <button type="button" class="btn btn-primary waves-light" (click)="formregister.show()" mdbRippleRadius>Register</button>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <i class="fa fa-users fa-3x"></i>
+        <h4 class="card-title ">Start a New Team</h4>
+        <p class="card-text"></p>
+        <button type="button" class="btn btn-primary relative waves-light" (click)="demoBasic.show()" mdbRippleRadius>Show Me</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <img class="pomodoro" src="/assets/pomodoro.png" />
+        <h4 class="card-title ">Learn to Pomodoro</h4>
+        <p class="card-text"></p>
+        <button type="button" class="btn btn-primary relative waves-light" (click)="demoBasic.show()" mdbRippleRadius>Show Me</button>
+
+      </div>
+    </div>
+  </div>  
+</div>
+
+
+
+  <!--Footer-->
+  <footer class="page-footer stylish-color">
+
+    <div class="call-to-action">
+      <ul>
+        <li>
+          <img id="footer-logo" src="/assets/nebbia_icon.png" />
+          <h5> Nebbia Pomodoro Timer App</h5>
+        </li>
+        <!-- <li><a href="" class="btn btn-danger waves-light" mdbRippleRadius>Sign up!</a></li> -->
+      </ul>
+    </div>
+
+    <!--Copyright-->
+    <div class="footer-copyright">
+      <div class="container-fluid">
+        © 2018 Copyright:
+        <a href="https://nebbiatech.com"> nebbiatech.com </a>
+      </div>
+    </div>
+    <!--/.Copyright-->
+  </footer>
+  <!--/.Footer-->
+
+
+<!-- Modals -->
+<!-- Login / Register -->
+<div mdbModal #form="mdb-modal" class="modal fade" id="modalLogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog cascading-modal" role="document">
+    <!--Content-->
+    <div class="modal-content">
+
+      <!--Header-->
+      <div class="modal-header nebbia-green darken-3 white-text">
+        <h4 class="title">
+          <i class="fa fa-user"></i> Log in</h4>
+        <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close" (click)="form.hide()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <!--Body-->
+      <div class="modal-body">
+        <div class="md-form form-sm">
+          <i class="fa fa-envelope prefix"></i>
+          <input mdbActive type="text" id="form30" class="form-control">
+          <label for="form30">Your email</label>
+        </div>
+
+        <div class="md-form form-sm">
+          <i class="fa fa-lock prefix"></i>
+          <input mdbActive type="password" id="form31" class="form-control">
+          <label for="form31">Your password</label>
+        </div>
+
+        <div class="text-center mt-2">
+          <button class="btn btn-info waves-light" (click)="gotoPomodoro()" mdbRippleRadius>Log in
+            <i class="fa fa-sign-in ml-1"></i>
+          </button>
+        </div>
+
+      </div>
+      <!--Footer-->
+      <div class="modal-footer">
+        <div class="options text-center text-md-right mt-1">
+          <p>Not a member?
+            <a href="#" data-dismiss="modal" (click)="form.hide()" (click)="formregister.show()">Sign Up</a>
+          </p>
+          <p>Forgot
+            <a href="#">Password?</a>
+          </p>
+        </div>
+        <button type="button" class="btn btn-outline-info ml-auto" data-dismiss="modal" (click)="form.hide()" mdbRippleRadius>Close</button>
+      </div>
+    </div>
+    <!--/.Content-->
+  </div>
+</div>
+
+
+<div mdbModal #formregister="mdb-modal" class="modal fade" id="modalRegister" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog cascading-modal" role="document">
+    <!--Content-->
+    <div class="modal-content">
+
+      <!--Header-->
+      <div class="modal-header nebbia-green darken-3 white-text">
+        <h4 class="title">
+          <i class="fa fa-user-plus"></i> Register</h4>
+        <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close" (click)="formregister.hide()">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <!--Body-->
+      <div class="modal-body">
+        <div class="md-form form-sm">
+          <i class="fa fa-envelope prefix"></i>
+          <input mdbActive type="text" id="form32" class="form-control">
+          <label for="form32">Your email</label>
+        </div>
+
+        <div class="md-form form-sm">
+          <i class="fa fa-lock prefix"></i>
+          <input mdbActive type="password" id="form33" class="form-control">
+          <label for="form33">Your password</label>
+        </div>
+
+        <div class="md-form form-sm">
+          <i class="fa fa-lock prefix"></i>
+          <input mdbActive type="password" id="form34" class="form-control">
+          <label for="form34">Repeat password</label>
+        </div>
+
+        <div class="text-center mt-2">
+          <button class="btn btn-info waves-light" mdbRippleRadius>Sign up
+            <i class="fa fa-sign-in ml-1"></i>
+          </button>
+        </div>
+
+      </div>
+      <!--Footer-->
+      <div class="modal-footer">
+        <div class="options text-center text-md-right mt-1">
+          <p>Already have an account?
+            <a href="#" data-dismiss="modal" (click)="formregister.hide()" (click)="form.show()">Log In</a>
+          </p>
+        </div>
+        <button type="button" class="btn btn-outline-info ml-auto" data-dismiss="modal" (click)="formregister.hide()" mdbRippleRadius>Close</button>
+      </div>
+    </div>
+    <!--/.Content-->
+  </div>
+</div>
+
+
+<!-- Pomodoro Technique -->
+<div mdbModal #demoBasic="mdb-modal" class="modal fade" id="basicExample" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <img id="pomodoro-technique" src="/assets/pomodoro-technique.png" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm waves-light" data-dismiss="modal" (click)="demoBasic.hide()" mdbRippleRadius>Got It!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- /. Modals -->
