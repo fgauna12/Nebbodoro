@@ -2,13 +2,12 @@
 using System.Linq;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Nebbodoro.API.Context;
 using Nebbodoro.API.EventGrid;
 using Nebbodoro.API.Models;
 
 namespace Nebbodoro.API.Controllers
-{
+{   
     [Route("api/pomodoro")]
     public class PomodoroController : Controller
     {
@@ -98,6 +97,7 @@ namespace Nebbodoro.API.Controllers
         public IActionResult Post([FromBody]Pomodoro pomodoro)
         {
             var user = _pomodoroContext.Users.FirstOrDefault(u => u.Email == pomodoro.User.Email);
+
             _pomodoroContext.Pomodoros.Add(new Pomodoro
             {
                 Task = pomodoro.Task,
@@ -112,15 +112,30 @@ namespace Nebbodoro.API.Controllers
             return Ok();
         }
 
-        [Route("{id}/done")]
+        [Route("{email}/done")]
         [HttpPost]
-        public IActionResult Post([FromRoute] int id)
+        public IActionResult Post([FromRoute] string email)
         {
-            var pomodoro = _pomodoroContext.Pomodoros.FirstOrDefault(x => x.Id == id);
-            if (pomodoro != null)
+            var user = _pomodoroContext.Users.FirstOrDefault(u => u.Email == email);
+
+            if (user == null)
+                return NotFound();
+
+            var pomodoro = new Pomodoro
             {
-                _eventGridManager.OnPomodoroDone(pomodoro);
-            }
+                Task = "Some task",
+                Start = DateTime.Now,
+                End = DateTime.Now,
+                Duration = 25,
+                User = user
+            };
+
+            _pomodoroContext.Pomodoros.Add(pomodoro);
+
+            _pomodoroContext.SaveChanges();
+
+            _eventGridManager.OnPomodoroDone(pomodoro);
+
             return Ok();
         }
 

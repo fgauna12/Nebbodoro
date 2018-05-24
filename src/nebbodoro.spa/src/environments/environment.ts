@@ -5,7 +5,5 @@
 
 export const environment = {
   production: false,
-  runTimeSettings: {
-    apiUrl: ''
-  }
+  apiUrl: 'http://localhost:41187/api/'
 };

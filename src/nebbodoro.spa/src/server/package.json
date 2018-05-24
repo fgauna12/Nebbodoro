@@ -1,15 +1,15 @@
 {
-    "name": "nebbodoro.spa.server",
-    "version": "0.0.1",
-    "description": "Express server to serve static files",
-    "license": "MIT",
-    "scripts": {
-      "start": "node index.js"
-    },
-    "private": true,
-    "dependencies": {
-      "body-parser": "^1.18.3",
-      "express": "^4.16.3"
-    },
-    "devDependencies": {}
-  }
+  "name": "nebbodoro.spa.server",
+  "version": "0.0.1",
+  "description": "Express server to serve static files",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3"
+  },
+  "devDependencies": {}
+}
