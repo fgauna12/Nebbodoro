@@ -4,11 +4,15 @@ import { environment } from '../environments/environment';
 @Injectable()
 export class RuntimeSettingService {
 
+  isInitialized: boolean;
   cachedSettings : IRuntimeSettings;
   constructor( ) { }
 
   init = () => {
-    this.load().then(settings => this.cachedSettings = settings);
+    this.load().then(settings => {
+      this.cachedSettings = settings;
+      this.isInitialized = true;
+    });
   }
 
   load = (): Promise<IRuntimeSettings> => {
