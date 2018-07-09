@@ -98,6 +98,9 @@ namespace Nebbodoro.API.Controllers
         {
             var user = _pomodoroContext.Users.FirstOrDefault(u => u.Email == pomodoro.User.Email);
 
+            if (user == null)
+                return NotFound("User not found");
+
             _pomodoroContext.Pomodoros.Add(new Pomodoro
             {
                 Task = pomodoro.Task,
