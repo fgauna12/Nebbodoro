@@ -39,6 +39,12 @@
         "description": ""
       }
     },
+    "names-nebbodoro-sqlsvr-failovergroup": {
+       "type": "string",
+       "metadata": {
+            "description": ""
+        }
+    },
     "sql-admin-username": {
       "type": "string",
       "defaultValue": "nebbodoro-admin",
@@ -93,7 +99,9 @@
    }
   },
   "variables": {
-    "primary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-0')]"
+    "primary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-0')]",
+    "secondary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-1')]",
+    "failovergroup": "[concat(variables('primary-database-sqlsvr'), '/', parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
   },
   "resources": [
     {
@@ -145,6 +153,34 @@
         "collation": "SQL_Latin1_General_CP1_CI_AS",
         "requestedServiceObjectiveName": "[parameters('sizes-nebbodoro-database')]"
       }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Sql/servers/failoverGroups",
+      "name": "[variables('failovergroup')]",
+      "properties": {
+        "serverName": "[variables('primary-database-sqlsvr')]",
+        "partnerServers": [
+          {
+            "id": "[resourceId('Microsoft.Sql/servers/', variables('secondary-database-sqlsvr'))]"
+          }
+        ],
+        "readWriteEndpoint": {
+          "failoverPolicy": "Automatic",
+          "failoverWithDataLossGracePeriodMinutes": 60
+        },
+        "readOnlyEndpoint": {
+          "failoverPolicy": "Disabled"
+        },
+        "databases": [
+          "[resourceId('Microsoft.Sql/servers/databases', variables('primary-database-sqlsvr'), parameters('names-nebbodoro-database'))]"
+        ]
+      },
+      "dependsOn": [
+        "[variables('primary-database-sqlsvr')]",
+        "[resourceId('Microsoft.Sql/servers/databases', variables('primary-database-sqlsvr'), parameters('names-nebbodoro-database'))]",
+        "[resourceId('Microsoft.Sql/servers', variables('secondary-database-sqlsvr'))]"
+      ]
     },
     {
       "apiVersion": "2014-06-01",
@@ -206,7 +242,7 @@
           ],
           "properties": {
             "Sql": {
-              "value": "[concat('Data Source=tcp:', reference(resourceId('Microsoft.Sql/servers/', variables('primary-database-sqlsvr'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('names-nebbodoro-database'), ';User Id=', parameters('sql-admin-username'), '@', variables('primary-database-sqlsvr'), ';Password=', parameters('sql-admin-password'), ';')]",
+              "value": "[concat('Data Source=tcp:', parameters('names-nebbodoro-sqlsvr-failovergroup'),'.database.windows.net,1433;Initial Catalog=', parameters('names-nebbodoro-database'), ';User Id=', parameters('sql-admin-username'),';Password=', parameters('sql-admin-password'), ';')]",
               "type": "SQLServer"
             }
           }
@@ -238,6 +274,10 @@
     "outputs-api-name": {
       "type": "string",
       "value": "[reference(parameters('names-nebbodoro-api')).deploymentId]"
+    },
+    "outputs-fg":{
+      "type": "object",
+      "value": "[reference(parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
     }
   }
 }

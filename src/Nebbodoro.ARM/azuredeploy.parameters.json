@@ -16,6 +16,12 @@
     },
     "names-nebbodoro-eventgrid": {
       "value": "cmd-eastus-nebbodoro-eventgrid"
+    },
+    "names-nebbodoro-sqlsvr-failovergroup": {
+        "value": "cmd-nebbodoro-sqlsvr-fg1"
+    },
+    "sizes-nebbodoro-database": {
+        "value": "S0"
     }
   }
 }
