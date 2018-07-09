@@ -3,19 +3,19 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "names-nebbodoro-api-sp": {
-      "value": "cmd-nebbodoro-api-sp"
+      "value": "cmd-eastus-nebbodoro-api-sp"
     },
     "names-nebbodoro-api": {
-      "value": "cmd-nebbodoro-api"
+      "value": "cmd-eastus-nebbodoro-api"
     },
     "names-nebbodoro-api-ai": {
-      "value": "cmd-nebbodoro-api-ai"
+      "value": "cmd-eastus-nebbodoro-api-ai"
     },
     "names-nebbodoro-sqlsvr": {
-      "value": "cmd-nebbodoro-sqlsvr-01"
+      "value": "cmd-nebbodoro-sqlsvr"
     },
     "names-nebbodoro-eventgrid": {
-      "value": "cmd-nebbodoro-eventgrid"
+      "value": "cmd-eastus-nebbodoro-eventgrid"
     }
   }
 }
