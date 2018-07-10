@@ -3,10 +3,10 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "names-nebbodoro-api-sp": {
-      "value": "cmd-eastus-nebbodoro-api-sp"
+      "value": "cmd-nebbodoro-api-sp"
     },
     "names-nebbodoro-api": {
-      "value": "cmd-eastus-nebbodoro-api"
+      "value": "cmd-nebbodoro-api"
     },
     "names-nebbodoro-api-ai": {
       "value": "cmd-eastus-nebbodoro-api-ai"
