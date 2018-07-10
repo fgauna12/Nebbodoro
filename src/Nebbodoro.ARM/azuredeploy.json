@@ -45,6 +45,12 @@
             "description": ""
         }
     },
+    "names-traffic-manager":{
+      "type": "string",
+      "metadata": {
+        "description": "The name of the traffic manager instance"
+      }
+    },
     "sql-admin-username": {
       "type": "string",
       "defaultValue": "nebbodoro-admin",
@@ -101,7 +107,18 @@
   "variables": {
     "primary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-0')]",
     "secondary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-1')]",
-    "failovergroup": "[concat(variables('primary-database-sqlsvr'), '/', parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
+    "failovergroup": "[concat(variables('primary-database-sqlsvr'), '/', parameters('names-nebbodoro-sqlsvr-failovergroup'))]",
+    "copy": [
+      {
+          "name": "names-nebbodoro-api-sps",
+          "count": "[length(parameters('locations'))]",
+          "input": {
+            "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('names-nebbodoro-api-sps'))]",
+            "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('names-nebbodoro-api-sps'))]",
+            "location": "[parameters('locations')[copyIndex('names-nebbodoro-api-sps')]]"
+          }
+      }
+  ]
   },
   "resources": [
     {
@@ -183,54 +200,64 @@
       ]
     },
     {
+      "copy": {
+        "name": "nebbodoroApiSpsCopy",
+        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "mode": "serial",
+        "batchSize": 1
+      },
       "apiVersion": "2014-06-01",
-      "name": "[parameters('names-nebbodoro-api-sp')]",
+      "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
+      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
       "sku": {
         "name": "[parameters('sizes-sp')]"
       },
       "tags": {
-        "displayName": "[parameters('names-nebbodoro-api-sp')]",
+        "displayName": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
         "Tier": "Back-end"
       },
       "properties": {
-        "name": "[parameters('names-nebbodoro-api-sp')]"
+        "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]"
       }
     },
     {
-      "apiVersion": "2014-04-01",
+      "apiVersion": "2015-05-01",
       "name": "[parameters('names-nebbodoro-api-ai')]",
       "type": "Microsoft.Insights/components",
       "location": "[resourceGroup().location]",
+      "kind": "web",
       "tags": {
         "displayName": "[parameters('names-nebbodoro-api-ai')]",
         "Tier": "Back-end"
       },
-      "dependsOn": [
-        "[concat('Microsoft.Web/sites/', parameters('names-nebbodoro-api'))]"
-      ],
-      "properties": {
-        "applicationId": "[parameters('names-nebbodoro-api')]"
+      "properties":{
+        "Application_Type": "web"
       }
     },
     {
+      "copy": {
+        "name": "nebbodoroApiCopy",
+        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "mode": "serial",
+        "batchSize": 1
+      },
       "apiVersion": "2015-08-01",
-      "name": "[parameters('names-nebbodoro-api')]",
+      "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
       "type": "Microsoft.Web/sites",
-      "location": "[resourceGroup().location]",
+      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
       "tags": {
-        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]": "Resource",
-        "displayName": "[parameters('names-nebbodoro-api')]",
+        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]": "Resource",
+        "displayName": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
         "Tier": "Back-end"
       },
       "dependsOn": [
-        "[concat('Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]",
+        "[concat('Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]",
         "[resourceId('Microsoft.Sql/servers/', variables('primary-database-sqlsvr'))]"
       ],
       "properties": {
-        "name": "[parameters('names-nebbodoro-api')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('names-nebbodoro-api-sp'))]"
+        "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]"
       },
       "resources": [
         {
@@ -238,7 +265,7 @@
           "type": "config",
           "name": "connectionstrings",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites/', parameters('names-nebbodoro-api'))]"
+            "[resourceId('Microsoft.Web/Sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]"
           ],
           "properties": {
             "Sql": {
@@ -252,7 +279,7 @@
           "type": "config",
           "name": "appSettings",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites/', parameters('names-nebbodoro-api'))]",
+            "[resourceId('Microsoft.Web/Sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
             "[resourceId('Microsoft.insights/components/', parameters('names-nebbodoro-api-ai'))]"
           ],
           "properties": {
@@ -268,16 +295,53 @@
       "type": "Microsoft.EventGrid/topics",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-01-01"
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "name": "TrafficManager",
+      "location": "global",
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Priority",
+        "dnsConfig": {
+          "relativeName": "[parameters('names-traffic-manager')]",
+          "ttl": 30
+        },
+        "monitorConfig": {
+          "protocol": "HTTP",
+          "port": 80,
+          "path": "/"
+        }
+      }
+    },
+    {
+      "copy": {
+        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "name": "trafficManagerEndpointsCopy"
+      },
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+      "dependsOn": [
+        "Microsoft.Network/trafficManagerProfiles/TrafficManager",
+        "[concat('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]"
+      ],
+      "location": "global",
+      "name": "[concat('TrafficManager/Endpoint-', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+      "properties": {
+        "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+        "endpointStatus": "Enabled"
+      }
     }
   ],
   "outputs": {
-    "outputs-api-name": {
-      "type": "string",
-      "value": "[reference(parameters('names-nebbodoro-api')).deploymentId]"
-    },
     "outputs-fg":{
       "type": "object",
       "value": "[reference(parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
+    },
+    "outputs-appservices":{
+      "type": "array",
+      "value": "[variables('names-nebbodoro-api-sps')]"
     }
   }
 }
