@@ -45,6 +45,12 @@
             "description": ""
         }
     },
+    "names-traffic-manager":{
+      "type": "string",
+      "metadata": {
+        "description": "The name of the traffic manager instance"
+      }
+    },
     "sql-admin-username": {
       "type": "string",
       "defaultValue": "nebbodoro-admin",
@@ -108,7 +114,8 @@
           "count": "[length(parameters('locations'))]",
           "input": {
             "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('names-nebbodoro-api-sps'))]",
-            "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('names-nebbodoro-api-sps'))]"
+            "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('names-nebbodoro-api-sps'))]",
+            "location": "[parameters('locations')[copyIndex('names-nebbodoro-api-sps')]]"
           }
       }
   ]
@@ -202,7 +209,7 @@
       "apiVersion": "2014-06-01",
       "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
+      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
       "sku": {
         "name": "[parameters('sizes-sp')]"
       },
@@ -238,7 +245,7 @@
       "apiVersion": "2015-08-01",
       "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
       "type": "Microsoft.Web/sites",
-      "location": "[resourceGroup().location]",
+      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
       "tags": {
         "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]": "Resource",
         "displayName": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
@@ -288,6 +295,43 @@
       "type": "Microsoft.EventGrid/topics",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-01-01"
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "name": "TrafficManager",
+      "location": "global",
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Priority",
+        "dnsConfig": {
+          "relativeName": "[parameters('names-traffic-manager')]",
+          "ttl": 30
+        },
+        "monitorConfig": {
+          "protocol": "HTTP",
+          "port": 80,
+          "path": "/"
+        }
+      }
+    },
+    {
+      "copy": {
+        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "name": "trafficManagerEndpointsCopy"
+      },
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+      "dependsOn": [
+        "Microsoft.Network/trafficManagerProfiles/TrafficManager",
+        "[concat('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]"
+      ],
+      "location": "global",
+      "name": "[concat('TrafficManager/Endpoint-', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+      "properties": {
+        "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+        "endpointStatus": "Enabled"
+      }
     }
   ],
   "outputs": {
@@ -295,7 +339,7 @@
       "type": "object",
       "value": "[reference(parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
     },
-    "outputs-test":{
+    "outputs-appservices":{
       "type": "array",
       "value": "[variables('names-nebbodoro-api-sps')]"
     }

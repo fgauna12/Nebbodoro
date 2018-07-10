@@ -20,6 +20,9 @@
     "names-nebbodoro-sqlsvr-failovergroup": {
         "value": "cmd-nebbodoro-sqlsvr-fg1"
     },
+    "names-traffic-manager": {
+        "value": "cmd-nebbodoro"
+    },
     "sizes-nebbodoro-database": {
         "value": "S0"
     }
