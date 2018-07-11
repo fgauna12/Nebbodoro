@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "environment": {
+       "type": "string",
+       "metadata": {
+            "description": "The name of the environment"
+        }
+    },
     "names-nebbodoro-api-sp": {
       "type": "string",
       "metadata": {
@@ -43,6 +49,12 @@
        "type": "string",
        "metadata": {
             "description": ""
+        }
+    },
+    "names-certificate": {
+      "type": "string",
+       "metadata": {
+            "description": "The name of the App Service certificate"
         }
     },
     "names-traffic-manager":{
@@ -102,7 +114,26 @@
           "eastus", 
           "westus2" 
        ] 
-   }
+   },
+   "config-certificate-keyvaultid":{
+     "type": "string",
+     "metadata": {
+       "description": "The Azure Keyvault Id to be used to pull the SSL certificate"
+     }
+   },
+   "config-certificate-keyvaultsecretname":{
+    "type": "string",
+    "defaultValue": "wildcard-certificate",
+    "metadata": {
+      "description": "The name of the Azure Keyvault secret"
+    }
+    },
+    "config-hostname":{
+      "type": "string",
+      "metadata": {
+        "description": "The hostname to use for these app services. Like api.nebbiatech.com"
+      }
+    }
   },
   "variables": {
     "primary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-0')]",
@@ -115,12 +146,30 @@
           "input": {
             "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('names-nebbodoro-api-sps'))]",
             "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('names-nebbodoro-api-sps'))]",
-            "location": "[parameters('locations')[copyIndex('names-nebbodoro-api-sps')]]"
+            "location": "[parameters('locations')[copyIndex('names-nebbodoro-api-sps')]]",
+            "vanityHostName": "[concat(parameters('locations')[copyIndex('names-nebbodoro-api-sps')], '-', parameters('config-hostname'))]",
+            "certName": "[concat(parameters('names-certificate'),'-', copyIndex('names-nebbodoro-api-sps'))]"
           }
       }
   ]
   },
   "resources": [
+    {
+      "copy": {
+        "name": "appServiceCertificateCopy",
+        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "mode": "Serial",
+        "batchSize": 1
+      },
+      "type": "Microsoft.Web/certificates",
+      "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].certName]",
+      "apiVersion": "2016-03-01",
+      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
+      "properties": {
+        "keyVaultId": "[parameters('config-certificate-keyvaultid')]",
+        "keyVaultSecretName": "[parameters('config-certificate-keyvaultsecretname')]"
+      }
+    },
     {
       "copy": { 
         "name": "sqlservercopy", 
@@ -203,13 +252,16 @@
       "copy": {
         "name": "nebbodoroApiSpsCopy",
         "count": "[length(variables('names-nebbodoro-api-sps'))]",
-        "mode": "serial",
+        "mode": "Serial",
         "batchSize": 1
       },
       "apiVersion": "2014-06-01",
       "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/certificates', variables('names-nebbodoro-api-sps')[copyIndex()].certName)]"
+      ],
       "sku": {
         "name": "[parameters('sizes-sp')]"
       },
@@ -239,7 +291,7 @@
       "copy": {
         "name": "nebbodoroApiCopy",
         "count": "[length(variables('names-nebbodoro-api-sps'))]",
-        "mode": "serial",
+        "mode": "Serial",
         "batchSize": 1
       },
       "apiVersion": "2015-08-01",
@@ -252,6 +304,7 @@
         "Tier": "Back-end"
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Web/certificates', variables('names-nebbodoro-api-sps')[copyIndex()].certName)]",
         "[concat('Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]",
         "[resourceId('Microsoft.Sql/servers/', variables('primary-database-sqlsvr'))]"
       ],
@@ -316,6 +369,7 @@
       }
     },
     {
+      "condition": "[not(equals(parameters('environment'), 'prod'))]",
       "copy": {
         "count": "[length(variables('names-nebbodoro-api-sps'))]",
         "name": "trafficManagerEndpointsCopy"
