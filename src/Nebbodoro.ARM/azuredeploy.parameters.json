@@ -2,6 +2,9 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "environment": {
+        "value": "cmd"
+    },
     "names-nebbodoro-api-sp": {
       "value": "cmd-nebbodoro-api-sp"
     },
@@ -22,6 +25,15 @@
     },
     "names-traffic-manager": {
         "value": "cmd-nebbodoro"
+    },
+    "names-certificate": {
+        "value": "cmd-nebbodoro-certificate"
+    },
+    "config-certificate-keyvaultid": {
+        "value": "/subscriptions/1979771a-9163-4750-8947-e6dbe596a8d7/resourceGroups/shared-nebbia-rg/providers/Microsoft.KeyVault/vaults/shared-nebbia-keyvault"
+    },
+    "config-certificate-keyvaultsecretname": {
+        "value": "NebbiaTechDotComWildcardCertificate"
     },
     "sizes-nebbodoro-database": {
         "value": "S0"
