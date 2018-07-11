@@ -127,12 +127,6 @@
     "metadata": {
       "description": "The name of the Azure Keyvault secret"
     }
-    },
-    "config-hostname":{
-      "type": "string",
-      "metadata": {
-        "description": "The hostname to use for these app services. Like api.nebbiatech.com"
-      }
     }
   },
   "variables": {
