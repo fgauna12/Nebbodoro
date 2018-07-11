@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "environment": {
+       "type": "string",
+       "metadata": {
+            "description": "The name of the environment"
+        }
+    },
     "names-nebbodoro-api-sp": {
       "type": "string",
       "metadata": {
@@ -43,6 +49,12 @@
        "type": "string",
        "metadata": {
             "description": ""
+        }
+    },
+    "names-certificate": {
+      "type": "string",
+       "metadata": {
+            "description": "The name of the App Service certificate"
         }
     },
     "names-traffic-manager":{
@@ -102,7 +114,26 @@
           "eastus", 
           "westus2" 
        ] 
-   }
+   },
+   "config-certificate-keyvaultid":{
+     "type": "string",
+     "metadata": {
+       "description": "The Azure Keyvault Id to be used to pull the SSL certificate"
+     }
+   },
+   "config-certificate-keyvaultsecretname":{
+    "type": "string",
+    "defaultValue": "wildcard-certificate",
+    "metadata": {
+      "description": "The name of the Azure Keyvault secret"
+    }
+    },
+    "config-hostname":{
+      "type": "string",
+      "metadata": {
+        "description": "The hostname to use for these app services. Like api.nebbiatech.com"
+      }
+    }
   },
   "variables": {
     "primary-database-sqlsvr": "[concat(parameters('names-nebbodoro-sqlsvr'), '-0')]",
@@ -110,17 +141,34 @@
     "failovergroup": "[concat(variables('primary-database-sqlsvr'), '/', parameters('names-nebbodoro-sqlsvr-failovergroup'))]",
     "copy": [
       {
-          "name": "names-nebbodoro-api-sps",
+          "name": "config-regionaware",
           "count": "[length(parameters('locations'))]",
           "input": {
-            "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('names-nebbodoro-api-sps'))]",
-            "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('names-nebbodoro-api-sps'))]",
-            "location": "[parameters('locations')[copyIndex('names-nebbodoro-api-sps')]]"
+            "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('config-regionaware'))]",
+            "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('config-regionaware'))]",
+            "location": "[parameters('locations')[copyIndex('config-regionaware')]]",
+            "certName": "[concat(parameters('names-certificate'),'-', copyIndex('config-regionaware'))]"
           }
       }
   ]
   },
   "resources": [
+    {
+      "copy": {
+        "name": "appServiceCertificateCopy",
+        "count": "[length(variables('config-regionaware'))]",
+        "mode": "Serial",
+        "batchSize": 1
+      },
+      "type": "Microsoft.Web/certificates",
+      "name": "[variables('config-regionaware')[copyIndex()].certName]",
+      "apiVersion": "2016-03-01",
+      "location": "[variables('config-regionaware')[copyIndex()].location]",
+      "properties": {
+        "keyVaultId": "[parameters('config-certificate-keyvaultid')]",
+        "keyVaultSecretName": "[parameters('config-certificate-keyvaultsecretname')]"
+      }
+    },
     {
       "copy": { 
         "name": "sqlservercopy", 
@@ -202,23 +250,26 @@
     {
       "copy": {
         "name": "nebbodoroApiSpsCopy",
-        "count": "[length(variables('names-nebbodoro-api-sps'))]",
-        "mode": "serial",
+        "count": "[length(variables('config-regionaware'))]",
+        "mode": "Serial",
         "batchSize": 1
       },
       "apiVersion": "2014-06-01",
-      "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
+      "name": "[variables('config-regionaware')[copyIndex()].spName]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
+      "location": "[variables('config-regionaware')[copyIndex()].location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/certificates', variables('config-regionaware')[copyIndex()].certName)]"
+      ],
       "sku": {
         "name": "[parameters('sizes-sp')]"
       },
       "tags": {
-        "displayName": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]",
+        "displayName": "[variables('config-regionaware')[copyIndex()].spName]",
         "Tier": "Back-end"
       },
       "properties": {
-        "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].spName]"
+        "name": "[variables('config-regionaware')[copyIndex()].spName]"
       }
     },
     {
@@ -238,26 +289,27 @@
     {
       "copy": {
         "name": "nebbodoroApiCopy",
-        "count": "[length(variables('names-nebbodoro-api-sps'))]",
-        "mode": "serial",
+        "count": "[length(variables('config-regionaware'))]",
+        "mode": "Serial",
         "batchSize": 1
       },
       "apiVersion": "2015-08-01",
-      "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
+      "name": "[variables('config-regionaware')[copyIndex()].name]",
       "type": "Microsoft.Web/sites",
-      "location": "[variables('names-nebbodoro-api-sps')[copyIndex()].location]",
+      "location": "[variables('config-regionaware')[copyIndex()].location]",
       "tags": {
-        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]": "Resource",
-        "displayName": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
+        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]": "Resource",
+        "displayName": "[variables('config-regionaware')[copyIndex()].name]",
         "Tier": "Back-end"
       },
       "dependsOn": [
-        "[concat('Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]",
+        "[resourceId('Microsoft.Web/certificates', variables('config-regionaware')[copyIndex()].certName)]",
+        "[concat('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
         "[resourceId('Microsoft.Sql/servers/', variables('primary-database-sqlsvr'))]"
       ],
       "properties": {
-        "name": "[variables('names-nebbodoro-api-sps')[copyIndex()].name]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('names-nebbodoro-api-sps')[copyIndex()].spName)]"
+        "name": "[variables('config-regionaware')[copyIndex()].name]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
       },
       "resources": [
         {
@@ -265,7 +317,7 @@
           "type": "config",
           "name": "connectionstrings",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]"
+            "[resourceId('Microsoft.Web/Sites/', variables('config-regionaware')[copyIndex()].name)]"
           ],
           "properties": {
             "Sql": {
@@ -279,7 +331,7 @@
           "type": "config",
           "name": "appSettings",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+            "[resourceId('Microsoft.Web/Sites/', variables('config-regionaware')[copyIndex()].name)]",
             "[resourceId('Microsoft.insights/components/', parameters('names-nebbodoro-api-ai'))]"
           ],
           "properties": {
@@ -316,20 +368,21 @@
       }
     },
     {
+      "condition": "[not(equals(parameters('environment'), 'prod'))]",
       "copy": {
-        "count": "[length(variables('names-nebbodoro-api-sps'))]",
+        "count": "[length(variables('config-regionaware'))]",
         "name": "trafficManagerEndpointsCopy"
       },
       "apiVersion": "2015-11-01",
       "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
       "dependsOn": [
         "Microsoft.Network/trafficManagerProfiles/TrafficManager",
-        "[concat('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]"
+        "[concat('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]"
       ],
       "location": "global",
-      "name": "[concat('TrafficManager/Endpoint-', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+      "name": "[concat('TrafficManager/Endpoint-', variables('config-regionaware')[copyIndex()].name)]",
       "properties": {
-        "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('names-nebbodoro-api-sps')[copyIndex()].name)]",
+        "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]",
         "endpointStatus": "Enabled"
       }
     }
@@ -341,7 +394,7 @@
     },
     "outputs-appservices":{
       "type": "array",
-      "value": "[variables('names-nebbodoro-api-sps')]"
+      "value": "[variables('config-regionaware')]"
     }
   }
 }
