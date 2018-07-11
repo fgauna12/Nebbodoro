@@ -29,12 +29,6 @@
     "names-certificate": {
         "value": "cmd-nebbodoro-certificate"
     },
-    "config-certificate-keyvaultid": {
-        "value": "/subscriptions/1979771a-9163-4750-8947-e6dbe596a8d7/resourceGroups/shared-nebbia-rg/providers/Microsoft.KeyVault/vaults/shared-nebbia-keyvault"
-    },
-    "config-certificate-keyvaultsecretname": {
-        "value": "NebbiaTechDotComWildcardCertificate"
-    },
     "sizes-nebbodoro-database": {
         "value": "S0"
     }
