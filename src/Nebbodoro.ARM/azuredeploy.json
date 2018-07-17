@@ -373,7 +373,6 @@
       }
     },
     {
-      "condition": "[not(equals(parameters('environment'), 'prod'))]",
       "copy": {
         "count": "[length(variables('config-regionaware'))]",
         "name": "trafficManagerEndpointsCopy"
@@ -391,6 +390,7 @@
         "endpointStatus": "Enabled"
       }
     }
+
   ],
   "outputs": {
     "outputs-fg":{
