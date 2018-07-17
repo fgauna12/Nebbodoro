@@ -1,0 +1,164 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webApp": {
+           "type": "string",
+           "metadata": {
+                "description": "The web app being monitored"
+            }
+        },
+        "servicePlan": {
+           "type": "string",
+           "metadata": {
+                "description": "The service plan being monitored"
+            }
+        },
+        "aiAlertRules": {
+           "type": "object",
+           "defaultValue": {
+               "highCpu": "",
+                "longHttpQueue": "",
+                "internalServerError": "",
+                "forbiddenRequests": ""
+           },
+           "metadata": {
+                "description": ""
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+           
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('aiAlertRules').highCpu]",
+            "type": "Microsoft.Insights/alertrules",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('servicePlan'))]": "Resource"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('servicePlan'))]"
+            ],
+            "properties": {
+                "name": "[parameters('aiAlertRules').highCpu]",
+                "description": "[concat('The average CPU is high across all the instances of', parameters('servicePlan'))]",
+                "isEnabled": true,
+                "condition": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                    "dataSource": {
+                        "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                        "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('servicePlan'))]",
+                        "metricName": "CpuPercentage"
+                    },
+                    "operator": "GreaterThan",
+                    "threshold": 90,
+                    "windowSize": "PT15M"
+                },
+                "action": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                    "sendToServiceOwners": true,
+                    "customEmails": []
+                }
+            }
+        },
+        {
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('aiAlertRules').longHttpQueue]",
+            "type": "Microsoft.Insights/alertrules",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/')]": "Resource"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('servicePlan'))]"
+            ],
+            "properties": {
+                "name": "[parameters('aiAlertRules').longHttpQueue]",
+                "description": "[concat('HTTP queue for the instances of ', parameters('servicePlan'),' has a large number of pending requests.')]",
+                "isEnabled": true,
+                "condition": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                    "dataSource": {
+                        "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                        "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('servicePlan'))]",
+                        "metricName": "HttpQueueLength"
+                    },
+                    "operator": "GreaterThan",
+                    "threshold": 100.0,
+                    "windowSize": "PT5M"
+                },
+                "action": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                    "sendToServiceOwners": true,
+                    "customEmails": []
+                }
+            }
+        },
+        {
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('aiAlertRules').internalServerError]",
+            "type": "Microsoft.Insights/alertrules",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('webApp'))]": "Resource"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', parameters('webApp'))]"
+            ],
+            "properties": {
+                "name": "[parameters('aiAlertRules').internalServerError]",
+                "description": "[concat(parameters('webApp'), ' has some server errors, status code 5xx.')]",
+                "isEnabled": true,
+                "condition": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                    "dataSource": {
+                        "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                        "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('webApp'))]",
+                        "metricName": "Http5xx"
+                    },
+                    "operator": "GreaterThan",
+                    "threshold": 0.0,
+                    "windowSize": "PT5M"
+                },
+                "action": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                    "sendToServiceOwners": true,
+                    "customEmails": []
+                }
+            }
+        },
+        {
+           "apiVersion": "2014-04-01",
+            "name": "[parameters('aiAlertRules').forbiddenRequests]",
+            "type": "Microsoft.Insights/alertrules",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', parameters('webApp'))]"
+            ],
+            "properties": {
+                "name": "[parameters('aiAlertRules').forbiddenRequests]",
+                "description": "[concat(parameters('webApp'), 'has some requests that are forbidden, status code 403.')]",
+                "isEnabled": true,
+                "condition": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                    "dataSource": {
+                        "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                        "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('webApp'))]",
+                        "metricName": "Http403"
+                    },
+                    "operator": "GreaterThan",
+                    "threshold": 0,
+                    "windowSize": "PT5M"
+                },
+                "action": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                    "sendToServiceOwners": true,
+                    "customEmails": []
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
