@@ -108,6 +108,12 @@
         "description": "Describes the performance level for Edition of SQL Database"
       }
     },
+    "sizes-sp-count": {
+       "type": "int",
+       "metadata": {
+            "description": "The number of instances to run"
+        }
+    },
     "locations": { 
       "type": "array", 
       "defaultValue": [ 
@@ -248,22 +254,23 @@
         "mode": "Serial",
         "batchSize": 1
       },
-      "apiVersion": "2014-06-01",
+      "apiVersion": "2016-09-01",
       "name": "[variables('config-regionaware')[copyIndex()].spName]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[variables('config-regionaware')[copyIndex()].location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/certificates', variables('config-regionaware')[copyIndex()].certName)]"
       ],
-      "sku": {
-        "name": "[parameters('sizes-sp')]"
-      },
       "tags": {
         "displayName": "[variables('config-regionaware')[copyIndex()].spName]",
         "Tier": "Back-end"
       },
+      "sku": {
+        "name": "[parameters('sizes-sp')]",
+        "capacity": "[parameters('sizes-sp-count')]"
+      },
       "properties": {
-        "name": "[variables('config-regionaware')[copyIndex()].spName]"
+        "name": "[variables('config-regionaware')[copyIndex()].spName]"  
       }
     },
     {
@@ -303,7 +310,11 @@
       ],
       "properties": {
         "name": "[variables('config-regionaware')[copyIndex()].name]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
+        "siteConfig":{
+          "use32BitWorkerProcess":  false, 
+          "alwaysOn":  true
+        }
       },
       "resources": [
         {
