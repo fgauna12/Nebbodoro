@@ -60,7 +60,19 @@
     "names-traffic-manager":{
       "type": "string",
       "metadata": {
-        "description": "The name of the traffic manager instance"
+        "description": "The name of traffic manager"
+      }
+    },
+    "names-nebbodoro-ai-autoscale":{
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Application Insights autoscale rules"
+      }
+    },
+    "names-nebbodoro-ai-alertrules":{
+      "type": "object",
+      "metadata": {
+        "description": "The names of the Application Insights alert rules"
       }
     },
     "sql-admin-username": {
@@ -147,7 +159,14 @@
             "spName": "[concat(parameters('names-nebbodoro-api-sp'),'-', copyIndex('config-regionaware'))]",
             "name": "[concat(parameters('names-nebbodoro-api'),'-', copyIndex('config-regionaware'))]",
             "location": "[parameters('locations')[copyIndex('config-regionaware')]]",
-            "certName": "[concat(parameters('names-certificate'),'-', copyIndex('config-regionaware'))]"
+            "certName": "[concat(parameters('names-certificate'),'-', copyIndex('config-regionaware'))]",
+            "aiAutoScale": "[concat(parameters('names-nebbodoro-ai-autoscale'),'-', copyIndex('config-regionaware'))]",
+            "aiAlertRules":{
+              "highCpu": "[concat(parameters('names-nebbodoro-ai-alertrules').highCpu,'-', copyIndex('config-regionaware'))]",
+              "longHttpQueue": "[concat(parameters('names-nebbodoro-ai-alertrules').longHttpQueue,'-', copyIndex('config-regionaware'))]",
+              "internalServerError": "[concat(parameters('names-nebbodoro-ai-alertrules').internalServerError,'-', copyIndex('config-regionaware'))]",
+              "forbiddenRequests" : "[concat(parameters('names-nebbodoro-ai-alertrules').forbiddenRequests,'-', copyIndex('config-regionaware'))]"
+            }
           }
       }
   ]
@@ -389,8 +408,221 @@
         "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]",
         "endpointStatus": "Enabled"
       }
+    },
+    {
+        "copy":{
+          "count": "[length(parameters('locations'))]",
+          "name": "aiAutoScaleCopy"
+        },
+        "name": "[variables('config-regionaware')[copyIndex()].aiAutoScale]",
+        "type": "Microsoft.Insights/autoscalesettings",
+        "apiVersion": "2014-04-01",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]": "Resource"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
+        ],
+        "properties": {
+            "name": "[variables('config-regionaware')[copyIndex()].aiAutoScale]",
+            "profiles": [
+                {
+                    "name": "Default",
+                    "capacity": {
+                        "minimum": 1,
+                        "maximum": 3,
+                        "default": 2
+                    },
+                    "rules": [
+                        {
+                            "metricTrigger": {
+                                "metricName": "CpuPercentage",
+                                "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
+                                "timeGrain": "PT1M",
+                                "statistic": "Average",
+                                "timeWindow": "PT10M",
+                                "timeAggregation": "Average",
+                                "operator": "GreaterThan",
+                                "threshold": 80.0
+                            },
+                            "scaleAction": {
+                                "direction": "Increase",
+                                "type": "ChangeCount",
+                                "value": 1,
+                                "cooldown": "PT10M"
+                            }
+                        },
+                        {
+                            "metricTrigger": {
+                                "metricName": "CpuPercentage",
+                                "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
+                                "timeGrain": "PT1M",
+                                "statistic": "Average",
+                                "timeWindow": "PT1H",
+                                "timeAggregation": "Average",
+                                "operator": "LessThan",
+                                "threshold": 60.0
+                            },
+                            "scaleAction": {
+                                "direction": "Decrease",
+                                "type": "ChangeCount",
+                                "value": 1,
+                                "cooldown": "PT1H"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "enabled": true,
+            "targetResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
+        }
+    },
+    {
+        "copy":{
+          "count": "[length(parameters('locations'))]",
+          "name": "aiHighCpuAlertsCopy"
+        },
+        "apiVersion": "2014-04-01",
+        "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.highCpu]",
+        "type": "Microsoft.Insights/alertrules",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]": "Resource"
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
+        ],
+        "properties": {
+            "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.highCpu]",
+            "description": "[concat('The average CPU is high across all the instances of', variables('config-regionaware')[copyIndex()].spName)]",
+            "isEnabled": true,
+            "condition": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                "dataSource": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                    "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
+                    "metricName": "CpuPercentage"
+                },
+                "operator": "GreaterThan",
+                "threshold": 90,
+                "windowSize": "PT15M"
+            },
+            "action": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                "sendToServiceOwners": true,
+                "customEmails": []
+            }
+        }
+    },
+    {
+        "copy":{
+          "count": "[length(parameters('locations'))]",
+          "name": "aiLongHttpQueueCopy"
+        },
+        "apiVersion": "2014-04-01",
+        "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.longHttpQueue]",
+        "type": "Microsoft.Insights/alertrules",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/')]": "Resource"
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]"
+        ],
+        "properties": {
+            "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.longHttpQueue]",
+            "description": "[concat('HTTP queue for the instances of ', variables('config-regionaware')[copyIndex()].spName,' has a large number of pending requests.')]",
+            "isEnabled": true,
+            "condition": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                "dataSource": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                    "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('config-regionaware')[copyIndex()].spName)]",
+                    "metricName": "HttpQueueLength"
+                },
+                "operator": "GreaterThan",
+                "threshold": 100.0,
+                "windowSize": "PT5M"
+            },
+            "action": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                "sendToServiceOwners": true,
+                "customEmails": []
+            }
+        }
+    },
+    {
+        "copy":{
+          "count": "[length(parameters('locations'))]",
+          "name": "aiInternalServerErrorCopy"
+        },
+        "apiVersion": "2014-04-01",
+        "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.internalServerError]",
+        "type": "Microsoft.Insights/alertrules",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]": "Resource"
+        },
+        "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]"
+        ],
+        "properties": {
+            "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.internalServerError]",
+            "description": "[concat(variables('config-regionaware')[copyIndex()].name, ' has some server errors, status code 5xx.')]",
+            "isEnabled": true,
+            "condition": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                "dataSource": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                    "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]",
+                    "metricName": "Http5xx"
+                },
+                "operator": "GreaterThan",
+                "threshold": 0.0,
+                "windowSize": "PT5M"
+            },
+            "action": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                "sendToServiceOwners": true,
+                "customEmails": []
+            }
+        }
+    },
+    {
+       "copy":{
+        "count": "[length(parameters('locations'))]",
+        "name": "aiForbiddenRequestsCopy"
+       },
+        "apiVersion": "2014-04-01",
+        "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.forbiddenRequests]",
+        "type": "Microsoft.Insights/alertrules",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]"
+        ],
+        "properties": {
+            "name": "[variables('config-regionaware')[copyIndex()].aiAlertRules.forbiddenRequests]",
+            "description": "[concat(variables('config-regionaware')[copyIndex()].name , 'has some requests that are forbidden, status code 403.')]",
+            "isEnabled": true,
+            "condition": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                "dataSource": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                    "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]",
+                    "metricName": "Http403"
+                },
+                "operator": "GreaterThan",
+                "threshold": 0,
+                "windowSize": "PT5M"
+            },
+            "action": {
+                "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                "sendToServiceOwners": true,
+                "customEmails": []
+            }
+        }
     }
-
   ],
   "outputs": {
     "outputs-fg":{
