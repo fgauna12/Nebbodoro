@@ -625,13 +625,13 @@
     }
   ],
   "outputs": {
-    "outputs-fg":{
-      "type": "object",
-      "value": "[reference(parameters('names-nebbodoro-sqlsvr-failovergroup'))]"
+    "PrimaryWebApp": {
+      "type": "string",
+      "value": "[variables('config-regionaware')[0].name]"
     },
-    "outputs-appservices":{
-      "type": "array",
-      "value": "[variables('config-regionaware')]"
+    "SecondaryWebApp": {
+      "type": "string",
+      "value": "[variables('config-regionaware')[1].name]"
     }
   }
 }
