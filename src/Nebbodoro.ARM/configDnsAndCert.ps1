@@ -30,12 +30,11 @@ function ShowCNameInstruction {
     )
 
     $info = @{
-        HostName = $HostName;
-        Name = $name;
-        Value = $value
+        Host = $name;
+        PointsTo = $value
     }
 
-    Write-Host "$($HostName) - Please configure a CNAME record"
+    Write-Host "$($HostName) - Please configure a CNAME record for your $($HostName) domain"
 
     $info | Format-Table | Out-String| % {Write-Host $_}
 
@@ -53,23 +52,23 @@ foreach ($item in $webApps) {
     $appServiceVanityUrl = "$($fullSubDomain).$($HostName)"
 
     ShowCNameInstruction -name $fullSubDomain -value $item.DefaultHostName
-    ShowCNameInstruction -name $vanityUrl -value $item.DefaultHostName
+    ShowCNameInstruction -name $SubDomain -value $item.DefaultHostName
 
     Write-Host "Adding custom domain $($vanityUrl) and $($fullSubDomain) to $($item.Name)"
 
     # Add the custom domain
-    Set-AzureRmWebApp -Name $item.Name -ResourceGroupName $ResourceGroupName -HostNames @($appServiceVanityUrl, $vanityUrl, $item.DefaultHostName)
+    Set-AzureRmWebApp -Name $item.Name -ResourceGroupName $ResourceGroupName -HostNames @($appServiceVanityUrl, $vanityUrl, $item.DefaultHostName) -ErrorAction Stop
 
     Write-Host "Adding SSL binding for https://$($appServiceVanityUrl)"
 
     # Add the SSL binding for that custom domain
-    New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $item.Name -Thumbprint $CertificateThumbprint -Name $appServiceVanityUrl
+    New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $item.Name -Thumbprint $CertificateThumbprint -Name $appServiceVanityUrl -ErrorAction Stop
 
     Write-Host "Now open https://$($appServiceVanityUrl) and verify that the domain name resolves"
     Read-Host "Press [Enter] key when ready ..."
 
     Write-Host "Adding SSL binding for https://$($vanityUrl)"
-    New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $item.Name -Thumbprint $CertificateThumbprint -Name $vanityUrl
+    New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName -WebAppName $item.Name -Thumbprint $CertificateThumbprint -Name $vanityUrl -ErrorAction Stop
 
     Write-Host "Now open https://$($vanityUrl) and verify that the domain name resolves"
     Read-Host "Press [Enter] key when ready ..."
@@ -95,9 +94,10 @@ foreach ($item in $webApps) {
 }
 
 # Save the traffic manager profile
-Set-AzureRmTrafficManagerProfile -TrafficManagerProfile $profile
+Set-AzureRmTrafficManagerProfile -TrafficManagerProfile $profile -ErrorAction Stop
 
 $trafficManagerUrl = "$($profile.RelativeDnsName).trafficmanager.net"
-ShowCNameInstruction -name $vanityUrl -value $trafficManagerUrl
+ShowCNameInstruction -name $SubDomain -value $trafficManagerUrl
 
 Write-Host "Configuration Complete!"
+Write-Host "Run nslookup against $($vanityUrl) to verify that it resolves to the primary app service"
