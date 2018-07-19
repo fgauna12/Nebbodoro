@@ -333,7 +333,8 @@
         "siteConfig":{
           "use32BitWorkerProcess":  false, 
           "alwaysOn":  true
-        }
+        },
+        "httpsOnly": true	
       },
       "resources": [
         {
@@ -389,24 +390,6 @@
           "port": 80,
           "path": "/"
         }
-      }
-    },
-    {
-      "copy": {
-        "count": "[length(variables('config-regionaware'))]",
-        "name": "trafficManagerEndpointsCopy"
-      },
-      "apiVersion": "2015-11-01",
-      "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
-      "dependsOn": [
-        "Microsoft.Network/trafficManagerProfiles/TrafficManager",
-        "[concat('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]"
-      ],
-      "location": "global",
-      "name": "[concat('TrafficManager/Endpoint-', variables('config-regionaware')[copyIndex()].name)]",
-      "properties": {
-        "targetResourceId": "[resourceId('Microsoft.Web/sites/', variables('config-regionaware')[copyIndex()].name)]",
-        "endpointStatus": "Enabled"
       }
     },
     {
